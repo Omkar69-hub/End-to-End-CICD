@@ -5,7 +5,9 @@ terraform {
         version = "6.21.0"
     }
   }
+
   backend "s3" {
+    bucket = "ec2-terraform-and-aws-project-bucket"
     key = "aws/ec2-deploy/terraform.tfstate" 
     region = "ap-south-1"
   }
