@@ -1,4 +1,3 @@
-
 name: CI/CD with Terraform and AWS
 
 on:
@@ -8,12 +7,9 @@ on:
       - Complete-CI/CD-with-Terraform-AWS
 
 env:
-   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-   AWS_SECRET_ACCESS_KEY_ID: ${{ secrets.AWS_SECRET_ACCESS_KEY_ID }}
-   AWS_TF_STATE_BUCKET_NAME: ${{ secrets.AWS_TF_STATE_BUCKET_NAME }}
-   AWS_SSH_KEY_PRIVATE: ${{ secrets.AWS_SSH_KEY_PRIVATE }}
-   AWS_SSH_KEY_PUBLIC: ${{ secrets.AWS_SSH_KEY_PUBLIC }}
-   AWS_REGION: "ap-south-1"
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_REGION: ap-south-1
 
 jobs:
   deploy-infra:
@@ -21,45 +17,36 @@ jobs:
 
     defaults:
       run:
-        working-directory: ./terraform
+        working-directory: terraform   # 🔥 VERY IMPORTANT
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
+          terraform_version: 1.6.7
           terraform_wrapper: false
 
-      # 🔍 Verify secrets injection
-      - name: Verify secrets injection (SAFE)
+      # Safe check (does NOT print secrets)
+      - name: Verify AWS environment
         run: |
           echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:+SET}"
-          echo "AWS_SECRET_ACCESS_KEY_ID=${AWS_SECRET_ACCESS_KEY_ID:+SET}"
-          echo "AWS_TF_STATE_BUCKET_NAME=${AWS_TF_STATE_BUCKET_NAME:+SET}"
-          echo "AWS_SSH_KEY_PRIVATE=${AWS_SSH_KEY_PRIVATE:+SET}"
-          echo "AWS_SSH_KEY_PUBLIC=${AWS_SSH_KEY_PUBLIC:+SET}"
+          echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:+SET}"
+          echo "AWS_REGION=$AWS_REGION"
 
-      - name: terraform init
-        id: init
+      # Backend already defined in main.tf
+      - name: Terraform Init
+        run: terraform init -reconfigure
+
+      - name: Terraform Plan
         run: |
-          terraform init -reconfigure \
-            -backend-config="bucket=${{ env.AWS_TF_STATE_BUCKET_NAME }}" \
-            -backend-config="region=${{ env.AWS_REGION }}"
-
-      - name: terraform Plan
-        id: plan
-        run: |-
           terraform plan \
-          -var="aws_region=$AWS_REGION" \
-          -var="public_key=$AWS_SSH_KEY_PUBLIC" \
-          -var="private_key=$AWS_SSH_KEY_PRIVATE" \
-          -var="key_name=deployer-key" \
-          -out=PLAN
-        working-directory: ./terraform
+            -var="key_name=deployer-key" \
+            -var="public_key=${{ secrets.AWS_SSH_KEY_PUBLIC }}" \
+            -var="private_key=${{ secrets.AWS_SSH_KEY_PRIVATE }}" \
+            -out=tfplan
 
-      - name: terraform Apply
-        id: apply
-        run: terraform apply PLAN
-        working-directory: ./terraform
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
