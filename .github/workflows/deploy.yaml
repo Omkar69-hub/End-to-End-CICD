@@ -40,7 +40,7 @@ jobs:
       - name: terraform init
         id: init
         run: |
-          terraform init \
+          terraform init -reconfigure \
             -backend-config="bucket=${{ env.AWS_TF_STATE_BUCKET_NAME }}" \
             -backend-config="region=${{ env.AWS_REGION }}"
 
