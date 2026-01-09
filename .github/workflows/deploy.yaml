@@ -1,0 +1,59 @@
+
+name: CI/CD with Terraform and AWS
+
+on:
+  push:
+    branches:
+      - main
+      - Complete-CI/CD-with-Terraform-AWS
+
+env:
+   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+   AWS_SECRET_ACCESS_KEY_ID: ${{ secrets.AWS_SECRET_ACCESS_KEY_ID }}
+   AWS_TF_STATE_BUCKET_NAME: ${{ secrets.AWS_TF_STATE_BUCKET_NAME }}
+   AWS_SSH_KEY_PRIVATE: ${{ secrets.AWS_SSH_KEY_PRIVATE }}
+   AWS_SSH_KEY_PUBLIC: ${{ secrets.AWS_SSH_KEY_PUBLIC }}
+   AWS_REGION: "ap-south-1"
+
+jobs:
+  deploy-infra:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
+
+      # 🔍 Verify secrets injection
+      - name: Verify secrets injection (SAFE)
+        run: |
+          echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:+SET}"
+          echo "AWS_SECRET_ACCESS_KEY_ID=${AWS_SECRET_ACCESS_KEY_ID:+SET}"
+          echo "AWS_TF_STATE_BUCKET_NAME=${AWS_TF_STATE_BUCKET_NAME:+SET}"
+          echo "AWS_SSH_KEY_PRIVATE=${AWS_SSH_KEY_PRIVATE:+SET}"
+          echo "AWS_SSH_KEY_PUBLIC=${AWS_SSH_KEY_PUBLIC:+SET}"
+
+      - name: terraform init
+        id: init
+        run: terraform init -backend-config="bucket=$AWS_TF_STATE_BUCKET_NAME" -backend-config="region=$AWS_REGION"
+        working-directory: ./terraform
+
+      - name: terraform Plan
+        id: plan
+        run: |-
+          terraform plan \
+          -var="aws_region=$AWS_REGION" \
+          -var="public_key=$AWS_SSH_KEY_PUBLIC" \
+          -var="private_key=$AWS_SSH_KEY_PRIVATE" \
+          -var="key_name=deployer-key" \
+          -out=PLAN
+        working-directory: ./terraform
+
+      - name: terraform Apply
+        id: apply
+        run: terraform apply PLAN
+        working-directory: ./terraform
