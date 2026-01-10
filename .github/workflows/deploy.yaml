@@ -38,6 +38,14 @@ jobs:
           echo "AWS_SSH_KEY_PRIVATE=${AWS_SSH_KEY_PRIVATE:+SET}"
           echo "AWS_SSH_KEY_PUBLIC=${AWS_SSH_KEY_PUBLIC:+SET}"
 
+      - name: Write private key to file
+        run: |
+              mkdir -p ./terraform/keys
+              echo "$AWS_SSH_KEY_PRIVATE" > ./terraform/keys/deployer.pem
+              chmod 600 ./terraform/keys/deployer.pem
+        working-directory: ./terraform
+
+
       - name: terraform init
         id: init
         run: terraform init -backend-config="bucket=$AWS_TF_STATE_BUCKET_NAME" -backend-config="region=$AWS_REGION"
