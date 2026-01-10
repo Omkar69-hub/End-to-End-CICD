@@ -27,7 +27,7 @@ resource "aws_instance" "Server" {
       type = "ssh"
       host = self.public_ip
       user = "ec2-user"
-      private_key = var.private_key
+      private_key = file("C:/Users/Asus/OneDrive/Desktop/End-to-End CICD/terraform/deployer.pem")
       timeout = "4m"
     }
     tags = {

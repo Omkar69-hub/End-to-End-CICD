@@ -4,10 +4,6 @@ variable "region" {
     default     = "ap-south-1"
 }
 
-variable "private_key" {
-    description = "Private key for SSH access to EC2 instances"
-    type        = string
-}
 
 variable "public_key" {
     description = "Public key for SSH access to EC2 instances"
