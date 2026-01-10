@@ -1,3 +1,3 @@
 key_name = "deployer-key"
 public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA+cEGYWSDbjT9fpCMoDWymYuBaIyfFOWdWx5NCXK4ve asus@Omkar"
-private_key_file_path = "C:/Users/Asus/.ssh/deployer"
+
