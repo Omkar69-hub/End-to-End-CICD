@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - main
-      - Complete-CI/CD-with-Terraform-AWS
+      - Complete-CI/CD-with-Terraform and AWS
 
 env:
    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
