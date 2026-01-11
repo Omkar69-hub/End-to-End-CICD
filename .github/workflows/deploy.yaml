@@ -68,10 +68,10 @@ jobs:
         run: terraform apply PLAN
         working-directory: ./terraform
 
-      - name: Set output
+      - name: Set Terraform output
         id: set-ip
-        run: |-
-          echo "::set-output name=instance_public_ip::$(terraform output instance_public_ip)"
+        run: echo "INSTANCE_PUBLIC_IP=$(terraform output -raw instance_public_ip)" >> $GITHUB_ENV
+        working-directory: ./terraform
 
   deploy-appl:
     runs-on: ubuntu-latest
@@ -105,18 +105,17 @@ jobs:
           AWS_DEFAULT_REGION: "ap-south-1"
         uses: appleboy/ssh-action@v0.1.7
         with:
-          host: ${{ needs.deploy-infra.outputs.SERVER_PUBLIC_IP }}
-          username: ubuntu
-          key: ${{ secrets.AWS_SSH_KEY_PRIVATE }}
-          envs: AWS_SSH_KEY_PRIVATE,REGISTRY,REPOSITORY,IMAGE_TAG,AWS_DEFAULT_REGION,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_REGION
-          scripts: |-
-            sudo apt update
-            sudo apt install docker.io -y
-            sudo apt install awscli -y
-            sudo ${aws ecr get-login --no-include-email --region ap-south-1};
-            sudo docker stop myappcontainer || true
-            sudo docker rm myappcontainer || true
-            sudo docker pull $REGISTRY/$REPOSITORY:$IMAGE_TAG
-            sudo docker run -d --name myappcontainer -p 80:3000 $REGISTRY/$REPOSITORY:$IMAGE_TAG
-          
+        host: ${{ env.INSTANCE_PUBLIC_IP }}   # use correct env variable
+        username: ubuntu
+        key: ${{ secrets.AWS_SSH_KEY_PRIVATE }}
+        envs: AWS_SSH_KEY_PRIVATE,REGISTRY,REPOSITORY,IMAGE_TAG,AWS_DEFAULT_REGION,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_REGION
+        script: |
+          sudo apt update
+          sudo apt install docker.io -y
+          sudo apt install awscli -y
+          aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin $REGISTRY
+          docker stop myappcontainer || true
+          docker rm myappcontainer || true
+          docker pull $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          docker run -d --name myappcontainer -p 80:3000 $REGISTRY/$REPOSITORY:$IMAGE_TAG
           
