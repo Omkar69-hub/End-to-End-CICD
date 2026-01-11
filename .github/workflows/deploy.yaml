@@ -31,7 +31,8 @@ jobs:
         with:
           terraform_wrapper: false
 
-      # 🔍 Verify secrets injection
+  
+  # 🔍 Verify secrets injection
       - name: Verify secrets injection (SAFE)
         run: |
           echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:+SET}"
