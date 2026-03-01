@@ -74,8 +74,18 @@ jobs:
         run: echo "instance_public_ip=$(terraform output -raw instance_public_ip)" >> $GITHUB_OUTPUT
         working-directory: ./terraform
 
+      - name: Verify EC2 IP was captured
+        run: |
+          IP="${{ steps.set-ip.outputs.instance_public_ip }}"
+          echo "Captured EC2 public IP: $IP"
+          if [ -z "$IP" ]; then
+            echo "ERROR: instance_public_ip is empty! Terraform may have failed to assign a public IP."
+            exit 1
+          fi
+
       - name: Wait for EC2 to be ready
-        run: sleep 60
+        run: sleep 90
+
 
   deploy-appl:
     environment: production
