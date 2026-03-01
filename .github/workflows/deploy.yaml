@@ -47,7 +47,6 @@ jobs:
               mkdir -p ./terraform/keys
               echo "$AWS_SSH_KEY_PRIVATE" > ./terraform/keys/deployer.pem
               chmod 600 ./terraform/keys/deployer.pem
-        working-directory: ./terraform
 
 
       - name: terraform init
@@ -74,6 +73,9 @@ jobs:
         id: set-ip
         run: echo "instance_public_ip=$(terraform output -raw instance_public_ip)" >> $GITHUB_OUTPUT
         working-directory: ./terraform
+
+      - name: Wait for EC2 to be ready
+        run: sleep 60
 
   deploy-appl:
     environment: production
@@ -108,7 +110,7 @@ jobs:
           AWS_DEFAULT_REGION: "ap-south-1"
         uses: appleboy/ssh-action@v0.1.7
         with:
-          host: ${{ env.SERVER_PUBLIC_IP }}   # use correct env variable
+          host: ${{ needs.deploy-infra.outputs.SERVER_PUBLIC_IP }}
           username: ubuntu
           key: ${{ secrets.AWS_SSH_KEY_PRIVATE }}
           envs: AWS_SSH_KEY_PRIVATE,REGISTRY,REPOSITORY,IMAGE_TAG,AWS_DEFAULT_REGION,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_REGION
