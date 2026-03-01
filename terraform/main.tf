@@ -23,6 +23,7 @@ resource "aws_instance" "Server" {
     key_name = aws_key_pair.deployer.key_name
     vpc_security_group_ids = [aws_security_group.maingroup.id]
     iam_instance_profile = aws_iam_instance_profile.ec2-profile.name
+    associate_public_ip_address = true
     connection {
       type = "ssh"
       host = self.public_ip
