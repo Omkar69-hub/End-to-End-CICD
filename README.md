@@ -261,3 +261,7 @@ git push origin main
 ## 📄 License
 
 This project is open-source and available under the [MIT License](LICENSE).
+
+---
+
+<p align="center">Made with ❤️ by Omkar &nbsp;|&nbsp; MIT Licensed &nbsp;|&nbsp; 2026</p>
