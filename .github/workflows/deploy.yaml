@@ -61,6 +61,7 @@ jobs:
           -var="region=$AWS_REGION" \
           -var="public_key=$AWS_SSH_KEY_PUBLIC" \
           -var="key_name=deployer-key" \
+          -var="tf_state_bucket=$AWS_TF_STATE_BUCKET_NAME" \
           -out=PLAN
         working-directory: ./terraform
 
@@ -118,6 +119,8 @@ jobs:
           REPOSITORY: nodeapp
           IMAGE_TAG: ${{ github.sha }}
           AWS_DEFAULT_REGION: "ap-south-1"
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ needs.deploy-infra.outputs.SERVER_PUBLIC_IP }}
@@ -128,9 +131,12 @@ jobs:
             sudo yum update -y
             sudo yum install docker -y
             sudo yum install awscli -y
-            aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin $REGISTRY
-            docker stop myappcontainer || true
-            docker rm myappcontainer || true
-            docker pull $REGISTRY/$REPOSITORY:$IMAGE_TAG
-            docker run -d --name myappcontainer -p 80:3000 $REGISTRY/$REPOSITORY:$IMAGE_TAG
+            sudo systemctl start docker
+            sudo systemctl enable docker
+            sudo usermod -aG docker ec2-user
+            aws ecr get-login-password --region $AWS_DEFAULT_REGION | sudo docker login --username AWS --password-stdin $REGISTRY
+            sudo docker stop myappcontainer || true
+            sudo docker rm myappcontainer || true
+            sudo docker pull $REGISTRY/$REPOSITORY:$IMAGE_TAG
+            sudo docker run -d --name myappcontainer -p 80:8080 $REGISTRY/$REPOSITORY:$IMAGE_TAG
           
