@@ -121,13 +121,13 @@ jobs:
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ needs.deploy-infra.outputs.SERVER_PUBLIC_IP }}
-          username: ubuntu
+          username: ec2-user
           key: ${{ secrets.AWS_SSH_KEY_PRIVATE }}
           envs: AWS_SSH_KEY_PRIVATE,REGISTRY,REPOSITORY,IMAGE_TAG,AWS_DEFAULT_REGION,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_REGION
           script: |
-            sudo apt update
-            sudo apt install docker.io -y
-            sudo apt install awscli -y
+            sudo yum update -y
+            sudo yum install docker -y
+            sudo yum install awscli -y
             aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin $REGISTRY
             docker stop myappcontainer || true
             docker rm myappcontainer || true
