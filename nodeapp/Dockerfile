@@ -1,21 +1,20 @@
-# Use Node.js version 14  as the base image
-FROM node:14 
+# Use latest stable Node.js
+FROM node:24
 
-# Set the working directory inside the container
-WORKDIR /usr/app 
+# Set working directory
+WORKDIR /usr/app
 
-# Copy package.json and package-lock.json to the working directory
-COPY package*.json . 
+# Copy package files
+COPY package*.json ./
 
-# Install the dependencies listed in package.json  
-RUN npm install  
+# Install dependencies
+RUN npm install
 
-# Copy the rest of the application code to the working directory              
-COPY . .      
+# Copy app code
+COPY . .
 
-# Expose port 8080 for the application             
-EXPOSE 8080     
+# Expose correct port
+EXPOSE 3000
 
-# Command to run the application               
-CMD ["node", "app.js"] 
-       
+# Run app
+CMD ["node", "app.js"]
