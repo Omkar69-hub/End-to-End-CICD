@@ -31,7 +31,7 @@ data "aws_ami" "amazon_linux_2023" {
 # Key Pair
 resource "aws_key_pair" "deployer" {
   key_name   = var.key_name
-  public_key = var.public_key
+  public_key = file("C:/Users/Asus/.ssh/id_ed25519.pub")
 }
 
 # IAM Role
@@ -99,7 +99,7 @@ resource "aws_instance" "app_server" {
   key_name               = aws_key_pair.deployer.key_name
 
   associate_public_ip_address = true
-  
+
   vpc_security_group_ids = [aws_security_group.web_sg.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
 
